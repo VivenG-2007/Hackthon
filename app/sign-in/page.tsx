@@ -2,10 +2,13 @@
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Briefcase, FileText, GraduationCap, TrendingUp, Sparkles } from 'lucide-react';
+import { SignInButton } from '@clerk/nextjs';
 
 export default function IntelligentCareerAgent() {
   const [scrollY, setScrollY] = useState(0);
+  const [theme, setTheme] = useState('dark');
   const ticking = useRef(false);
+  const isDark = theme === 'dark';
 
   useEffect(() => {
     const handleScroll = () => {
@@ -21,6 +24,15 @@ export default function IntelligentCareerAgent() {
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  const themeClasses = useMemo(() => ({
+    bg: isDark ? 'bg-slate-900' : 'bg-gray-50',
+    text: isDark ? 'text-white' : 'text-gray-900',
+    subtext: isDark ? 'text-slate-300' : 'text-gray-600',
+    card: isDark ? 'bg-white/5 backdrop-blur-lg border-white/10' : 'bg-white border-gray-200 shadow-lg',
+    accent: isDark ? 'text-purple-400' : 'text-purple-600',
+    ctaBg: isDark ? 'bg-gradient-to-r from-purple-600/20 to-pink-600/20 border-white/10' : 'bg-gradient-to-r from-purple-100 to-pink-100 border-purple-200'
+  }), [isDark]);
 
   const features = useMemo(() => [
     {
@@ -49,64 +61,75 @@ export default function IntelligentCareerAgent() {
     }
   ], []);
 
-  const handleGetStarted = () => {
-    window.location.href = '/login';
-  };
-
   return (
-    <div className="min-h-screen bg-gray-900 text-white overflow-x-hidden">
-      {/* Neon Background */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-500/30 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-cyan-500/30 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-      </div>
+    <div className={`min-h-screen transition-colors duration-500 ${themeClasses.bg}`}>
+      {/* Neon Background - Dark Mode Only */}
+      {isDark && (
+        <div className="fixed inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
+          <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-cyan-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" style={{ animationDelay: '2s' }}></div>
+          <div className="absolute bottom-1/4 left-1/3 w-96 h-96 bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" style={{ animationDelay: '4s' }}></div>
+        </div>
+      )}
 
       {/* Hero Section */}
-      <div className="relative min-h-screen flex items-center justify-center px-6 overflow-hidden">
-        <div className="text-center z-10 max-w-4xl mx-auto">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-500/10 border border-cyan-500/30 rounded-full mb-6 backdrop-blur-sm">
-            <Sparkles className="w-4 h-4 text-cyan-400" />
-            <span className="text-sm text-cyan-400 font-medium">AI-Powered Career Intelligence</span>
+      <div className="relative z-10 container mx-auto px-6 pt-20 pb-32">
+        <div className="text-center mb-16">
+          <div className={`inline-flex items-center gap-2 border rounded-full px-6 py-2 mb-8 transition-all duration-300 ${
+            isDark 
+              ? 'bg-purple-500/20 border-purple-500/30' 
+              : 'bg-purple-100 border-purple-300'
+          }`}>
+            <Sparkles className={`w-5 h-5 transition-colors duration-300 ${
+              isDark ? 'text-purple-400' : 'text-purple-600'
+            }`} />
+            <span className={`text-sm font-medium transition-colors duration-300 ${
+              isDark ? 'text-purple-300' : 'text-purple-700'
+            }`}>
+              AI-Powered Career Intelligence
+            </span>
           </div>
           
-          <h1 className="text-6xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent animate-pulse">
+          <h1 className={`text-6xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent leading-tight transition-opacity duration-500`}>
             Intelligent Career Agent
           </h1>
           
-          <p className="text-xl md:text-2xl text-gray-300 mb-12 leading-relaxed">
+          <p className={`text-xl md:text-2xl max-w-3xl mx-auto mb-12 leading-relaxed transition-colors duration-300 ${themeClasses.subtext}`}>
             Transform Your Career Journey with AI-Powered Resume Analysis, Personalized Training & Strategic Planning
           </p>
           
-          <button 
-            onClick={handleGetStarted}
-            className="px-8 py-4 bg-gradient-to-r from-purple-600 to-cyan-600 text-white rounded-full font-semibold text-lg hover:scale-105 transform transition-all duration-300 shadow-lg shadow-cyan-500/50 hover:shadow-cyan-500/70"
-          >
-            Get Started Now
-          </button>
+          <SignInButton mode="modal" forceRedirectUrl="/">
+            <button className="group relative inline-flex items-center gap-3 bg-linear-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white px-8 py-4 rounded-full text-lg font-semibold shadow-2xl shadow-purple-500/50 transition-all duration-300 hover:scale-105 hover:shadow-purple-500/70">
+              <Sparkles className="w-5 h-5 group-hover:rotate-12 transition-transform duration-300" />
+              Get Started Now
+            </button>
+          </SignInButton>
         </div>
-      </div>
 
-      {/* Feature Cards */}
-      <div className="relative py-20 px-6">
-        <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-8">
+        {/* Feature Cards */}
+        <div className="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto">
           {features.map((feature, index) => {
             const offset = scrollY > 300 ? (scrollY - 300) * 0.05 * (index % 2 === 0 ? 1 : -1) : 0;
             
             return (
               <div
                 key={index}
-                className="bg-gray-800/50 backdrop-blur-sm p-8 rounded-2xl border border-gray-700/50 hover:border-gray-600 transition-all duration-300 group"
-                style={{ transform: `translateX(${offset}px)` }}
+                className={`group relative border rounded-2xl p-8 transition-all duration-500 hover:scale-105 ${themeClasses.card} ${
+                  isDark ? 'hover:bg-white/10 hover:shadow-2xl' : 'hover:shadow-xl'
+                }`}
+                style={{ 
+                  transform: `translateY(${offset}px)`,
+                  transition: 'transform 0.1s ease-out, all 0.5s ease'
+                }}
               >
-                <div className={`w-16 h-16 rounded-xl bg-gradient-to-br ${feature.color} p-3 mb-6 group-hover:scale-110 transition-transform duration-300`}>
-                  {feature.icon}
+                <div className={`inline-flex p-4 rounded-xl bg-gradient-to-br ${feature.color} mb-6 group-hover:scale-110 transition-transform duration-300`}>
+                  <div className="text-white">{feature.icon}</div>
                 </div>
                 
-                <h3 className="text-2xl font-bold mb-4 text-white">
+                <h3 className={`text-2xl font-bold mb-4 transition-colors duration-300 ${themeClasses.text}`}>
                   {feature.title}
                 </h3>
-                
-                <p className="text-gray-300 leading-relaxed">
+                <p className={`leading-relaxed transition-colors duration-300 ${themeClasses.subtext}`}>
                   {feature.description}
                 </p>
               </div>
@@ -116,22 +139,25 @@ export default function IntelligentCareerAgent() {
       </div>
 
       {/* CTA Section */}
-      <div className="relative py-20 px-6">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
+      <div className={`relative z-10 border-t py-16 transition-all duration-500 ${themeClasses.ctaBg}`}>
+        <div className="container mx-auto px-6 text-center">
+          <h2 className={`text-4xl md:text-5xl font-bold mb-6 transition-colors duration-300 ${themeClasses.text}`}>
             Ready to Transform Your Career?
           </h2>
-          
-          <p className="text-xl text-gray-300 mb-8">
+          <p className={`text-xl mb-8 transition-colors duration-300 ${themeClasses.subtext}`}>
             Join professionals who are accelerating their careers with AI
           </p>
           
-          <button 
-            onClick={handleGetStarted}
-            className="px-8 py-4 bg-gradient-to-r from-purple-600 to-cyan-600 text-white rounded-full font-semibold text-lg hover:scale-105 transform transition-all duration-300 shadow-lg shadow-purple-500/50 hover:shadow-purple-500/70"
-          >
-            Thanks for Choosing Us
-          </button>
+          <SignInButton mode="modal" forceRedirectUrl="/">
+            <button className={`inline-flex items-center gap-3 px-8 py-4 rounded-full text-lg font-semibold shadow-2xl transition-all duration-300 hover:scale-105 ${
+              isDark 
+                ? 'bg-white text-purple-900 hover:bg-slate-100' 
+                : 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white'
+            }`}>
+              <Sparkles className="w-5 h-5" />
+              Get Started
+            </button>
+          </SignInButton>
         </div>
       </div>
     </div>
