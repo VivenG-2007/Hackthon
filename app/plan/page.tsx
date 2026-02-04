@@ -1,7 +1,7 @@
 "use client"
 import React, { useState, useEffect } from 'react';
 import { useUser } from "@clerk/nextjs";
-import { TrendingUp, TrendingDown, Target, BookOpen, DollarSign, Star, Zap, Clock, Briefcase, MapPin, Award, AlertCircle } from 'lucide-react';
+import { TrendingUp, TrendingDown, Target, BookOpen, DollarSign, Star, Zap, Clock, Briefcase, MapPin, Award, AlertCircle, Check, Plus } from 'lucide-react';
 
 function JobRecommendation() {
   const { user, isLoaded } = useUser();
@@ -167,6 +167,13 @@ function JobRecommendation() {
       .map(skill => skill.trim())
       .filter(skill => skill.length > 0);
 
+    const targetRoleToAnalyze = role || targetRole;
+    if (!targetRoleToAnalyze) {
+      setError('Please specify a target role');
+      setAnalyzingGap(false);
+      return;
+    }
+
     try {
       const response = await fetch(`${FAST_API_URL}/api/jobs/market/skill-gap`, {
         method: 'POST',
@@ -175,16 +182,20 @@ function JobRecommendation() {
         },
         body: JSON.stringify({
           skills: skillsArray,
-          target_role: role || targetRole
+          target_role: targetRoleToAnalyze
         }),
       });
 
       if (response.ok) {
         const data = await response.json();
         setSkillGap(data);
+        setActiveTab('skillgap');
+      } else {
+        throw new Error('Failed to analyze skill gap');
       }
     } catch (err) {
       console.error('Error analyzing skill gap:', err);
+      setError(err.message);
     } finally {
       setAnalyzingGap(false);
     }
@@ -240,6 +251,30 @@ function JobRecommendation() {
       case 'tutorial': return <Zap className="w-4 h-4" />;
       default: return <BookOpen className="w-4 h-4" />;
     }
+  };
+
+  const calculateAverageSalary = () => {
+    if (!result?.jobs?.length) return 0;
+    
+    let total = 0;
+    let count = 0;
+    
+    result.jobs.forEach(job => {
+      const salaryStr = job.salary_range_usd || job.salary || job.compensation || '';
+      const match = salaryStr.match(/\$?([\d,]+)\s*[-–]\s*\$?([\d,]+)/);
+      
+      if (match) {
+        const min = parseInt(match[1].replace(/,/g, '')) || 0;
+        const max = parseInt(match[2].replace(/,/g, '')) || 0;
+        const avg = (min + max) / 2;
+        if (!isNaN(avg)) {
+          total += avg;
+          count++;
+        }
+      }
+    });
+    
+    return count > 0 ? Math.round(total / count) : 0;
   };
 
   if (!isLoaded) {
@@ -583,7 +618,7 @@ function JobRecommendation() {
                             key={skillIndex}
                             className="px-3 py-2 bg-green-500/20 text-green-300 border border-green-500/30 rounded-xl text-sm"
                           >
-                            <CheckIcon className="w-4 h-4 inline mr-1" />
+                            <Check className="w-4 h-4 inline mr-1" />
                             {skill}
                           </span>
                         ))}
@@ -606,7 +641,7 @@ function JobRecommendation() {
                               key={skillIndex}
                               className="px-3 py-2 bg-blue-500/20 text-blue-300 border border-blue-500/30 rounded-xl text-sm"
                             >
-                              <PlusIcon className="w-4 h-4 inline mr-1" />
+                              <Plus className="w-4 h-4 inline mr-1" />
                               {skill}
                             </span>
                           ))}
@@ -648,12 +683,7 @@ function JobRecommendation() {
                 
                 <div className="bg-gray-700/30 p-4 md:p-6 rounded-xl">
                   <div className="text-3xl font-bold text-white mb-2">
-                    ${Math.round(result.jobs.reduce((sum, job) => {
-                      const salaryStr = job.salary_range_usd || job.salary || '0-0';
-                      const nums = salaryStr.match(/\d+/g) || [0, 0];
-                      const avg = (parseInt(nums[0] || 0) + parseInt(nums[1] || 0)) / 2;
-                      return sum + avg;
-                    }, 0) / result.jobs.length).toLocaleString()}
+                    ${calculateAverageSalary().toLocaleString()}
                   </div>
                   <div className="text-gray-300">Avg Salary (USD)</div>
                 </div>
@@ -668,7 +698,7 @@ function JobRecommendation() {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 md:mb-8">
               <div>
                 <h3 className="text-2xl font-bold text-white">Skill Gap Analysis</h3>
-                <p className="text-gray-300 mt-2">For Target Role: {skillGap.target_role}</p>
+                <p className="text-gray-300 mt-2">For Target Role: {skillGap.target_role || targetRole}</p>
               </div>
               
               <div className={`px-4 md:px-6 py-2 md:py-3 rounded-xl bg-gradient-to-r ${getMatchColor(skillGap.match_percent || 0)}`}>
@@ -682,7 +712,7 @@ function JobRecommendation() {
               <div className="bg-gray-700/30 p-4 md:p-6 rounded-xl">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="p-2 rounded-lg bg-green-500/20">
-                    <CheckIcon className="w-6 h-6 text-green-400" />
+                    <Check className="w-6 h-6 text-green-400" />
                   </div>
                   <h4 className="text-xl font-bold text-white">Skills You Have</h4>
                 </div>
@@ -693,7 +723,7 @@ function JobRecommendation() {
                       key={index}
                       className="px-3 py-2 bg-green-500/20 text-green-300 border border-green-500/30 rounded-xl text-sm"
                     >
-                      <CheckIcon className="w-4 h-4 inline mr-1" />
+                      <Check className="w-4 h-4 inline mr-1" />
                       {skill}
                     </span>
                   ))}
@@ -744,7 +774,7 @@ function JobRecommendation() {
             {skillGap.skills_missing && skillGap.skills_missing.length > 0 && (
               <div className="text-center">
                 <button
-                  onClick={() => generateLearningPlan(skillGap.skills_missing, skillGap.target_role)}
+                  onClick={() => generateLearningPlan(skillGap.skills_missing, skillGap.target_role || targetRole)}
                   disabled={generatingPlan}
                   className={`px-6 md:px-8 py-3 md:py-4 rounded-xl font-semibold transition-all ${
                     generatingPlan
@@ -891,18 +921,5 @@ function JobRecommendation() {
     </div>
   );
 }
-
-// Helper icons
-const CheckIcon = ({ className }: { className?: string }) => (
-  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-  </svg>
-);
-
-const PlusIcon = ({ className }: { className?: string }) => (
-  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-  </svg>
-);
 
 export default JobRecommendation;

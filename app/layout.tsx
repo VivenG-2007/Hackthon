@@ -4,7 +4,10 @@ import './globals.css';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <ClerkProvider>
+    <ClerkProvider
+  signInFallbackRedirectUrl="/"
+  signUpFallbackRedirectUrl="/"
+>
       <html lang="en">
         <body>
           <div className="flex"><NavBar /> </div>

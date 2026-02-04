@@ -80,7 +80,7 @@ const NavBar = () => {
       {/* Right: User Auth Buttons */}
       <div className="flex justify-end gap-4 items-center">
         <SignedOut>
-          <SignInButton mode="modal">
+          <SignInButton forceRedirectUrl="/" mode="modal">
             <button className={`px-4 py-2 rounded-lg font-semibold transition-all duration-300 ${
               isDark
                 ? 'bg-gray-800 text-cyan-400 hover:bg-gray-700 border border-cyan-500/30'
